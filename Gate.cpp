@@ -3,19 +3,23 @@
 
 #include "Gate.h"
 
-Gate::Gate()
-{
-    out = -1;
-    in1 = -1;
-    in2 = -1;
-}
+Gate::Gate(int i1, int i2, int io)
+    : out(-1), 
+      in1(-1), 
+      in2(-1),
+      net1(i1), 
+      net2(i2), 
+      netout(io)
+{}
 
-void Gate::setInput(int x)
+void Gate::setInput(int x, int net)
 {
-    if (in1 == -1) {
+    if (net1 == net) {
         in1 = x;
-    } else {
+    } else if (net2 == net) {
         in2 = x;
+    } else {
+        std::cout << "=== NO MATCHING NET ===" << std::endl;
     }
 }
 

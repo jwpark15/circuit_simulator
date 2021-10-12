@@ -10,12 +10,19 @@ class Gate
         int out;
         int in1;
         int in2;
+        int net1;
+        int net2;
+        int netout;
     public:
-        Gate();
+        Gate() {}
+        Gate(int i1, int i2, int io);
         int getout() {return out;}
         int get1() {return in1;}
         int get2() {return in2;}
-        virtual void setInput(int x);
+        int getNet1() {return net1;}
+        int getNet2() {return net2;}
+        int getNetout() {return netout;}
+        virtual void setInput(int x, int net);
         bool areInputsSet();
         virtual int evaluate() 
         {
@@ -27,14 +34,20 @@ class Gate
 class INVGate: public Gate
 {
     public:
-        INVGate() {std::cout << "Creating INV" << std::endl;}
+        INVGate(int i1, int i2, int io) : Gate(i1, i2, io) 
+        {
+            std::cout << "Creating INV" << std::endl;
+        }
         int evaluate();
 };
 
 class BUFGate : public Gate 
 {
     public:
-        BUFGate() {std::cout << "Creating BUF" << std::endl;}
+        BUFGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating BUF" << std::endl;
+        }
         int evaluate();
 
 };
@@ -42,7 +55,10 @@ class BUFGate : public Gate
 class ANDGate : public Gate 
 {
     public:
-        ANDGate() {std::cout << "Creating AND" << std::endl;}
+        ANDGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating AND" << std::endl;
+        }
         int evaluate();
 
 };
@@ -50,7 +66,10 @@ class ANDGate : public Gate
 class NANDGate : public Gate 
 {
     public:
-        NANDGate() {std::cout << "Creating NAND" << std::endl;}
+        NANDGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating NAND" << std::endl;
+        }
         int evaluate();
 
 };
@@ -58,23 +77,30 @@ class NANDGate : public Gate
 class ORGate : public Gate 
 {
     public:
-        ORGate() {std::cout << "Creating OR" << std::endl;}
+        ORGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating OR" << std::endl;
+        }
         int evaluate();
-
 };
 
 class NORGate : public Gate 
 {
     public:
-        NORGate() {std::cout << "Creating NOR" << std::endl;}
+        NORGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating NOR" << std::endl;
+        } 
         int evaluate();
-
 };
 
 class XORGate : public Gate 
 {
     public:
-        XORGate() {std::cout << "Creating XOR" << std::endl;}
+        XORGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating XOR" << std::endl;
+        }
         int evaluate();
 
 };
@@ -82,7 +108,10 @@ class XORGate : public Gate
 class XNORGate : public Gate 
 {
     public:
-        XNORGate() {std::cout << "Creating XNOR" << std::endl;}
+        XNORGate(int i1, int i2, int io) : Gate(i1, i2, io)
+        {
+            std::cout << "Creating XNOR" << std::endl;
+        }
         int evaluate();
 
 };
