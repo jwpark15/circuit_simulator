@@ -176,13 +176,8 @@ void parseFile(const char filename[], map<int, vector<int>> &net_map, map<int, G
     }
 }
     
-void updateInputNets(vector<int> &in_vec, const char binary_in[], int N)
-{
-    for (int i = 0; i < N; ++i)
-    {
-        in_vec
-    }
-}
+
+
 int main(int argc, char** argv)
 {
     const char *filename = argv[1];
@@ -200,7 +195,5 @@ int main(int argc, char** argv)
         cout << "Wrong input size" << endl;
         return -1;
     }
-
-    updateInputNets(in_vec, bin_in, N);
     return 0;
 }
