@@ -164,10 +164,13 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
                 outputs.push_back(ii);
             }
         }
-    } else {
+    } 
+    /*
+    else {
         cout << "====== TYPE DOES NOT EXIST ========" << endl;
         cout << gate_name << endl;
     } 
+    */
 }
 
 
@@ -273,7 +276,7 @@ int main(int argc, char** argv)
     int M = out_vec.size() + 1;
     char output[M];
     simulateCircuit(net_map, gate_map, in_vec, out_vec, bin_in, N, output);
-    cout << "========= CIRCUIT OUTPUT: ==========" << endl;
+    if(DEBUG) {cout << "========= CIRCUIT OUTPUT: ==========" << endl;}
     cout << output << endl;
     return 0;
 }
