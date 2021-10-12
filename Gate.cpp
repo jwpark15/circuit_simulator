@@ -34,15 +34,34 @@ bool Gate::areInputsSet()
 }
 
 
+void INVGate::setInput(int x, int net)
+{
+    if (net1 == net) {
+        in1 = x;
+        in2 = x;
+    } else {
+        std::cout << "=== NO MATCHING NET ===" << std::endl;
+    }
+}
+
+void BUFGate::setInput(int x, int net)
+{
+    if (net1 == net) {
+        in1 = x;
+        in2 = x;
+    } else {
+        std::cout << "=== NO MATCHING NET ===" << std::endl;
+    }
+}
 
 int INVGate::evaluate()
 {
     if(areInputsSet()) 
     {
         out = (in1 ? 0 : 1);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -51,9 +70,9 @@ int BUFGate::evaluate()
     if(areInputsSet()) 
     {
         out = in1;
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -62,9 +81,9 @@ int ANDGate::evaluate()
     if(areInputsSet()) 
     {
         out = (in1 && in2);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -73,9 +92,9 @@ int NANDGate::evaluate()
     if(areInputsSet()) 
     {
         out = ((in1 && in2) ? 0 : 1);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -84,9 +103,9 @@ int ORGate::evaluate()
     if(areInputsSet()) 
     {
         out = (in1 || in2);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -95,9 +114,9 @@ int NORGate::evaluate()
     if(areInputsSet()) 
     {
         out = ((in1 || in2) ? 0 : 1);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -106,9 +125,9 @@ int XORGate::evaluate()
     if(areInputsSet()) 
     {
         out = (in1 ^ in2);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         
@@ -117,9 +136,9 @@ int XNORGate::evaluate()
     if(areInputsSet()) 
     {
         out = ((in1 ^ in2) ? 0 : 1);
-        return 0;
+        return 1;
     } else {
-        return -1;
+        return 0;
     }
 }
         

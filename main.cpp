@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <queue>
 
 #include "Gate.h"
 
@@ -19,6 +20,16 @@ void printNetMap(map<int, vector<int>> &m)
         }
         cout << endl;
     }
+}
+
+void printQueue(queue<int> q)
+{
+    while(!q.empty())
+    {
+        cout << q.front() << " ";
+        q.pop();
+    }
+    cout << endl;
 }
 
 void updateNetMap(map<int, vector<int>> &net_map, int net_key, int gate_key)
@@ -176,7 +187,42 @@ void parseFile(const char filename[], map<int, vector<int>> &net_map, map<int, G
     }
 }
     
+string simulateCircuit(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &inputs, vector<int> &outputs, const char binary_in[], int N)
+{
+    // init gate queue
+    queue<int> q;
+    int k = 0;
+    for(auto &vin : inputs)
+    {
+        auto current_net = net_map.find(vin);
+        if (current_net != net_map.end()) 
+        {
+            // loop through gates for net entry
+            for(auto &vgate : net_map[vin])
+            {
+                gate_map[vgate]->setInput((int) binary_in[k], (int) vin);
+                // if all inputs are set for gate
+                if(gate_map[vgate]->areInputsSet())
+                    q.push(vgate);
+            }
+        }
+        cout << "This is bin[k]: " << binary_in[k] << ", K: " << k << endl;
+        ++k;
+    }
+    /*
+    while(!q.empty())
+    {
+        q.front()
 
+    }
+    */
+    
+    printQueue(q);
+
+    string output = "1010101";
+    return output;
+
+}
 
 int main(int argc, char** argv)
 {
@@ -195,5 +241,9 @@ int main(int argc, char** argv)
         cout << "Wrong input size" << endl;
         return -1;
     }
+
+    string output = simulateCircuit(net_map, gate_map, in_vec, out_vec, bin_in, N);
+    cout << "========= CIRCUIT OUTPUT: ==========" << endl;
+    cout << output << endl;
     return 0;
 }

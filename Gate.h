@@ -38,6 +38,7 @@ class INVGate: public Gate
         {
             std::cout << "Creating INV" << std::endl;
         }
+        void setInput(int x, int net);
         int evaluate();
 };
 
@@ -48,6 +49,7 @@ class BUFGate : public Gate
         {
             std::cout << "Creating BUF" << std::endl;
         }
+        void setInput(int x, int net);
         int evaluate();
 
 };
