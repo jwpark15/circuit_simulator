@@ -4,9 +4,11 @@
 #include <string>
 #include <sstream>
 #include <queue>
+#include <algorithm>
 
 #include "Gate.h"
 
+#define DEBUG 0
 using namespace std;
 
 void printNetMap(map<int, vector<int>> &m)
@@ -20,6 +22,16 @@ void printNetMap(map<int, vector<int>> &m)
         }
         cout << endl;
     }
+}
+
+void printNetVals(map<int, int> &m)
+{
+    cout << "===== NET VALUES ======" << endl;
+    for (auto itr = m.begin(); itr != m.end(); ++itr)
+    {
+        cout << "NET: " << itr->first << "\tVAL: " << itr->second << endl;
+    }
+    cout << "=======================" << endl;
 }
 
 void printQueue(queue<int> q)
@@ -48,13 +60,11 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
     string in1, in2, out;
     istringstream iss(gate_entry);
     iss >> gate_name;
-    cout << "========================================" << endl;
     if (gate_name == "INV") {
         iss >> in1 >> out;
         int iin1 = stoi(in1); 
         int iin2 = stoi(in1);
         int iout = stoi(out);
-        cout << "INV - " << "in: " << in1 << ", out: " << out << endl;
 
         // update maps for INV
         gate_map.insert(make_pair(key, new INVGate(iin1, iin2, iout))); 
@@ -65,7 +75,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in1);
         int iout = stoi(out);
-        cout << "BUF - " << "in: " << in1 << ", " << in2 << ", out: " << out << endl;
 
         // update maps for BUF
         gate_map.insert(make_pair(key, new BUFGate(iin1, iin2, iout))); 
@@ -76,7 +85,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in2);
         int iout = stoi(out);
-        cout << "AND - " << "in: " << in1 << ", " << in2 <<  ", out: " << out << endl;
         
         // update maps for AND
         gate_map.insert(make_pair(key, new ANDGate(iin1, iin2, iout))); 
@@ -88,7 +96,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in2);
         int iout = stoi(out);
-        cout << "NAND - " << "in: " << in1 << ", " << in2 << ", out: " << out << endl;
 
         // update maps for NAND
         gate_map.insert(make_pair(key, new NANDGate(iin1, iin2, iout))); 
@@ -100,7 +107,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in2);
         int iout = stoi(out);
-        cout << "OR - " << "in: " << in1 << ", " << in2 << ", out: " << out << endl;
         
         // update maps for OR
         gate_map.insert(make_pair(key, new ORGate(iin1, iin2, iout))); 
@@ -112,7 +118,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in2);
         int iout = stoi(out);
-        cout << "NOR - " << "in: " << in1 << ", " << in2 << ", out: " << out << endl;
 
         // update maps for NOR
         gate_map.insert(make_pair(key, new NORGate(iin1, iin2, iout))); 
@@ -124,7 +129,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in2);
         int iout = stoi(out);
-        cout << "XOR - " << "in: " << in1 << ", " << in2 << ", out: " << out << endl;
 
         // update maps for XOR
         gate_map.insert(make_pair(key, new XORGate(iin1, iin2, iout))); 
@@ -136,7 +140,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         int iin1 = stoi(in1);
         int iin2 = stoi(in2);
         int iout = stoi(out);
-        cout << "XNOR - " << "in: " << in1 << ", " << in2 << ", out: " << out << endl;
         
         // update maps for XNOR
         gate_map.insert(make_pair(key, new XNORGate(iin1, iin2, iout))); 
@@ -144,31 +147,26 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
         updateNetMap(net_map, iin2, key);
 
     } else if (gate_name == "INPUT") {
-        cout << "INPUTS: " << endl;
         string next;
         int ii;
         while (iss >> next) {
             ii = stoi(next);
             if (ii != -1) {
                 inputs.push_back(ii);
-                cout << next << " ";
             }
         }
-        cout << endl;
     } else if (gate_name == "OUTPUT") {
-        cout << "OUTPUTS:" << endl;
         string next;
         int ii;
         while (iss >> next) {
             ii = stoi(next);
             if (ii != -1) {
                 outputs.push_back(ii);
-                cout << next << " ";
             }
         }
-        cout << endl;
     } else {
         cout << "====== TYPE DOES NOT EXIST ========" << endl;
+        cout << gate_name << endl;
     } 
 }
 
@@ -187,9 +185,13 @@ void parseFile(const char filename[], map<int, vector<int>> &net_map, map<int, G
     }
 }
     
-string simulateCircuit(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &inputs, vector<int> &outputs, const char binary_in[], int N)
+void simulateCircuit(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &inputs, vector<int> &outputs, const char binary_in[], int N, char output[])
+
 {
-    // init gate queue
+    // map that will hold values for each net
+    map<int, int> net_values;
+
+    // init gate queue with vals from input nets
     queue<int> q;
     int k = 0;
     for(auto &vin : inputs)
@@ -197,31 +199,58 @@ string simulateCircuit(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map
         auto current_net = net_map.find(vin);
         if (current_net != net_map.end()) 
         {
+            // update net values map
+            int temp_val = (int) (binary_in[k] - '0');
+            net_values.insert(make_pair(vin, temp_val));
+
             // loop through gates for net entry
             for(auto &vgate : net_map[vin])
             {
-                gate_map[vgate]->setInput((int) binary_in[k], (int) vin);
+                gate_map[vgate]->setInput(temp_val, (int) vin);
                 // if all inputs are set for gate
                 if(gate_map[vgate]->areInputsSet())
                     q.push(vgate);
             }
         }
-        cout << "This is bin[k]: " << binary_in[k] << ", K: " << k << endl;
         ++k;
     }
-    /*
+
+    if(DEBUG) {
+        printQueue(q);
+        printNetVals(net_values);
+    }
+
+    int g, net, n_val;
     while(!q.empty())
     {
-        q.front()
+        // init values for net based on gate output
+        g = q.front();
+        gate_map[g]->evaluate();
+        net = gate_map[g]->getNetout();
+        n_val = gate_map[g]->getOut();
+        net_values.insert(make_pair(net, n_val));
 
+        for (auto &g2 : net_map[net])
+        {
+            gate_map[g2]->setInput(n_val, net);
+            if (gate_map[g2]->areInputsSet())
+                q.push(g2);
+        }
+            
+        if(DEBUG) {printQueue(q);}
+        q.pop();
     }
-    */
-    
-    printQueue(q);
 
-    string output = "1010101";
-    return output;
+    if(DEBUG) {printNetVals(net_values);}
 
+    // update output using net_values
+    int out_index = 0;
+    for (auto &vo : outputs)
+    {
+        output[out_index] = (char) (net_values[vo] + '0');
+        ++out_index;
+    }
+    output[out_index] = '\0';
 }
 
 int main(int argc, char** argv)
@@ -234,15 +263,16 @@ int main(int argc, char** argv)
     vector<int> in_vec;
     vector<int> out_vec;
     parseFile(filename, net_map, gate_map, in_vec, out_vec);
-    printNetMap(net_map);
+    if(DEBUG) {printNetMap(net_map);}
     int N = in_vec.size();
     
     if (N != string(bin_in).length()) {
         cout << "Wrong input size" << endl;
         return -1;
     }
-
-    string output = simulateCircuit(net_map, gate_map, in_vec, out_vec, bin_in, N);
+    int M = out_vec.size() + 1;
+    char output[M];
+    simulateCircuit(net_map, gate_map, in_vec, out_vec, bin_in, N, output);
     cout << "========= CIRCUIT OUTPUT: ==========" << endl;
     cout << output << endl;
     return 0;
