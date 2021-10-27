@@ -1,0 +1,15 @@
+Circuit: circuits/s27.txt
+Binary Input: 0100100
+
+------ DETECTED FAULTS ------
+NET		STUCK-AT
+1		1
+2		0
+3		1
+5		0
+7		1
+9		1
+11		0
+12		1
+15		1
+NUMBER OF FAULTS DETECTED: 9

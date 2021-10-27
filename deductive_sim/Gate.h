@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <map>
 
 #include "Fault.h"
 
@@ -31,7 +32,7 @@ class Gate
             std::cout << "Evaluating gate..." << std::endl;
             return 0;
         }
-        virtual void updateFaultList()
+        virtual void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
         {
             std::cout << "updating fault list..." << std::endl;
         }
@@ -43,7 +44,7 @@ class INVGate: public Gate
         INVGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         void setInput(int x, int net);
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class BUFGate : public Gate 
@@ -52,7 +53,7 @@ class BUFGate : public Gate
         BUFGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         void setInput(int x, int net);
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class ANDGate : public Gate 
@@ -60,7 +61,7 @@ class ANDGate : public Gate
     public:
         ANDGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class NANDGate : public Gate 
@@ -68,7 +69,7 @@ class NANDGate : public Gate
     public:
         NANDGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class ORGate : public Gate 
@@ -76,7 +77,7 @@ class ORGate : public Gate
     public:
         ORGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class NORGate : public Gate 
@@ -84,7 +85,7 @@ class NORGate : public Gate
     public:
         NORGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class XORGate : public Gate 
@@ -92,7 +93,7 @@ class XORGate : public Gate
     public:
         XORGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 class XNORGate : public Gate 
@@ -100,7 +101,7 @@ class XNORGate : public Gate
     public:
         XNORGate(int i1, int i2, int io) : Gate(i1, i2, io) {}
         int evaluate();
-        void updateFaultList();
+        void updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults);
 };
 
 #endif

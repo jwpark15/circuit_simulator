@@ -1,6 +1,3 @@
-#include <iostream>
-#include <vector>
-
 #include "Gate.h"
 
 Gate::Gate(int i1, int i2, int io)
@@ -65,9 +62,16 @@ int INVGate::evaluate()
     }
 }
 
-void INVGate::updateFaultList()
+void INVGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-   std::cout << "HI INV FAULT LIST " << std::endl; 
+    auto itr = fault_map.find(net1);
+    if (itr != fault_map.end()) 
+    {
+        //add fault vec of net 1 to netout
+        std::vector<fault> temp_vec = fault_map[net1];
+        fault_map.insert(std::make_pair(netout, temp_vec));
+    }
+    updateFaultMap(fault_map, potential_faults, netout, in1);
 }
         
 int BUFGate::evaluate()
@@ -81,9 +85,18 @@ int BUFGate::evaluate()
     }
 }
         
-void BUFGate::updateFaultList()
+void BUFGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    auto itr = fault_map.find(net1);
+    if (itr != fault_map.end()) 
+    {
+        // add fault vec of net 1 to netout
+        std::vector<fault> temp_vec = fault_map[net1];
+        fault_map.insert(std::make_pair(netout, temp_vec));
+    }
+    // since gate is BUF, add s-a val opposite of in1 val
+    int temp = (in1) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
 }
 
 int ANDGate::evaluate()
@@ -97,9 +110,24 @@ int ANDGate::evaluate()
     }
 }
         
-void ANDGate::updateFaultList()
+void ANDGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    if (in1 && in2) 
+    {
+        // both non controlling
+        unionFaults(fault_map, netout, net1, net2);
+    } else if (in1 && !in2) {
+        // in2 is controlling
+        subtractFaults(fault_map, netout, net2, net1);
+    } else if (!in1 && in2) {
+        // in1 is controlling
+        subtractFaults(fault_map, netout, net1, net2);
+    } else if (!in1 && !in2) {
+        // both controlling
+        intersectFaults(fault_map, netout, net1, net2); 
+    }
+    int temp = (out) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
 }
 
 int NANDGate::evaluate()
@@ -113,9 +141,25 @@ int NANDGate::evaluate()
     }
 }
         
-void NANDGate::updateFaultList()
+void NANDGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    if (in1 && in2) 
+    {
+        // both non controlling
+        unionFaults(fault_map, netout, net1, net2);
+    } else if (in1 && !in2) {
+        // in2 is controlling
+        subtractFaults(fault_map, netout, net2, net1);
+    } else if (!in1 && in2) {
+        // in1 is controlling
+        subtractFaults(fault_map, netout, net1, net2);
+    } else if (!in1 && !in2) {
+        // both controlling
+        intersectFaults(fault_map, netout, net1, net2); 
+    }
+    int temp = (out) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
+
 }
 
 int ORGate::evaluate()
@@ -129,9 +173,24 @@ int ORGate::evaluate()
     }
 }
         
-void ORGate::updateFaultList()
+void ORGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    if (!in1 && !in2) 
+    {
+        // both non controlling
+        unionFaults(fault_map, netout, net1, net2);
+    } else if (!in1 && in2) {
+        // in2 is controlling
+        subtractFaults(fault_map, netout, net2, net1);
+    } else if (in1 && !in2) {
+        // in1 is controlling
+        subtractFaults(fault_map, netout, net1, net2);
+    } else if (in1 && in2) {
+        // both controlling
+        intersectFaults(fault_map, netout, net1, net2); 
+    }
+    int temp = (out) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
 }
 
 int NORGate::evaluate()
@@ -145,9 +204,24 @@ int NORGate::evaluate()
     }
 }
         
-void NORGate::updateFaultList()
+void NORGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    if (!in1 && !in2) 
+    {
+        // both non controlling
+        unionFaults(fault_map, netout, net1, net2);
+    } else if (!in1 && in2) {
+        // in2 is controlling
+        subtractFaults(fault_map, netout, net2, net1);
+    } else if (in1 && !in2) {
+        // in1 is controlling
+        subtractFaults(fault_map, netout, net1, net2);
+    } else if (in1 && in2) {
+        // both controlling
+        intersectFaults(fault_map, netout, net1, net2); 
+    }
+    int temp = (out) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
 }
 
 int XORGate::evaluate()
@@ -161,9 +235,11 @@ int XORGate::evaluate()
     }
 }
         
-void XORGate::updateFaultList()
+void XORGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    int temp = (out) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
+    std::cout << " THIS IS XOR " << std::endl;
 }
 
 int XNORGate::evaluate()
@@ -177,8 +253,10 @@ int XNORGate::evaluate()
     }
 }
         
-void XNORGate::updateFaultList()
+void XNORGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
-    std::cout << "HI" << std::endl;
+    int temp = (out) ? 0 : 1;
+    updateFaultMap(fault_map, potential_faults, netout, temp);
+    std::cout << " THIS IS XNOR " << std::endl;
 }
 

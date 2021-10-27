@@ -9,39 +9,9 @@
 #include "Gate.h"
 #include "Fault.h"
 
-#define DEBUG 1
+#define DEBUG 0
 using namespace std;
 
-bool compareFaults(fault f1, fault f2)
-{
-    bool out;
-    if ((f1.net == f2.net) && (f1.sa == f2.sa)) 
-        out = true;
-    else    
-        out = false;
-    return out;
-}
-
-void printFaults(map<int, vector<fault>> &m)
-{
-    cout << "=== FAULTS ===" << endl;
-    for (auto itr = m.begin(); itr != m.end(); ++itr)
-    {
-        cout << "NET: " << itr->first << "\tFAULTS: ";
-        for (auto &v : itr->second)
-            cout << "(" << v.net << " " << v.sa << ")  ";
-        cout << endl;
-    }
-    cout << "=== END FAULTS ===" << endl;
-}
-
-void printFaultVec(vector<fault> &v)
-{
-    cout << "=== FAULT VEC ===" << endl;
-    for (auto &vf: v)
-        cout << "(" << vf.net << " " << vf.sa << ")" << endl;
-    cout << "=== END FAULT VEC ===" << endl;
-}
 
 
 void printNetMap(map<int, vector<int>> &m)
@@ -208,44 +178,6 @@ void updateMaps(string gate_entry, map<int, vector<int>> &net_map, map<int, Gate
     */
 }
 
-void updateFaultMap(map<int, vector<fault>> &fault_map, vector<fault> &fault_vec, int net, int sa_val)
-{
-    fault temp;
-    temp.sa = sa_val;
-    temp.net = net;
-    // make sure fault is in potential list before adding to map
-    bool potential = false;
-    for (auto &p : fault_vec)
-    {
-        if (compareFaults(temp, p)) {
-            potential = true;
-            break;
-        }
-    }    
-
-    if (!potential) 
-        return;
-
-    auto itr = fault_map.find(net);
-    if (itr != fault_map.end()) {
-        // make sure fault is not already in list
-        bool exists = false;
-        for (auto &v : fault_map[net]) 
-        {
-            if (compareFaults(v, temp)) {
-                exists = true;
-                break;
-            }
-        }
-
-        // if does not exist in list already, add it
-        if (!exists)
-            fault_map[net].push_back(temp);
-
-    } else {
-        fault_map.insert(make_pair(net, vector<fault> {temp}));
-    }
-}
 
 void updateFaultVec(vector<fault> &fault_vec, int net, int sa_val)
 {
@@ -336,6 +268,7 @@ void simulateCircuit(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, 
 
         // update output net value and fault list
         // TODO
+        gate_map[g]->updateFaultList(detected_fault_map, potential_fault_vec);
  
         for (auto &g2 : net_map[net])
         {
@@ -396,6 +329,44 @@ void assignAllStuckAtFaults(map<int, vector<int>> &net_map, vector<int> out_nets
     }
 }
 
+void printFaultsToFile(map<int, vector<fault>> &fault_map, vector<int> &out_vec, const char filename[], const char bin_in[])
+{
+
+    //cout << "printing Faults to File..." << endl;
+    string temp(filename);
+    //cout << temp.substr(temp.find_last_of("/") + 1) << endl;
+    
+    vector<fault> d;
+
+    ofstream f;
+    f.open("detected.faults");
+    f << "Circuit: " << filename << endl;
+    f << "Binary Input: " << bin_in << endl << endl;
+    f << "------ DETECTED FAULTS ------" << endl;
+    f << "NET\t\tSTUCK-AT" << endl;
+    // loop through all outputs and add detected
+    for (auto &o : out_vec)
+    {
+        for (auto &fo : fault_map[o])
+            d.push_back(fo);
+    } 
+    
+    // sort and erase duplicates
+    sort(d.begin(), d.end());
+    d.erase( unique( d.begin(), d.end()), d.end());
+
+    // loop through all faults and print to file
+    int counter = 0;
+    for (auto &df : d)
+    {
+        f << df.net << "\t\t" << df.sa << endl;
+        ++counter;
+    }
+    f << "NUMBER OF FAULTS DETECTED: " << counter;
+    f.close();
+
+}
+
 int main(int argc, char** argv)
 {
     const char *filename = argv[1];
@@ -410,7 +381,7 @@ int main(int argc, char** argv)
     map<int, vector<fault>> detected_fault_map;
 
     parseNetlistFile(filename, net_map, gate_map, in_vec, out_vec);
-    if(DEBUG) {printNetMap(net_map);}
+    //if(DEBUG) {printNetMap(net_map);}
     int N = in_vec.size();
     
     if (N != string(bin_in).length()) {
@@ -429,17 +400,24 @@ int main(int argc, char** argv)
         // assign stuck at faults for all nets
         assignAllStuckAtFaults(net_map, out_vec, potential_fault_vec);
     }
-
+    
+    /*
     if(DEBUG) {
         cout << "=== POTENTIAL FAULTS ===" << endl;
         printFaultVec(potential_fault_vec);
         cout << "========================" << endl;
     }
+    */
 
     int M = out_vec.size() + 1;
     char output[M];
     simulateCircuit(net_map, gate_map, potential_fault_vec, detected_fault_map, in_vec, out_vec, bin_in, N, output);
-    if(DEBUG) {cout << "========= CIRCUIT OUTPUT: ==========" << endl;}
+    if (DEBUG) {
+        cout << "======= FINAL DETECTED FAULTS ======" << endl;
+        printFaults(detected_fault_map);
+        cout << "========= CIRCUIT OUTPUT: ==========" << endl;
+    }
+    printFaultsToFile(detected_fault_map, out_vec, filename, bin_in);
     cout << output << endl;
     return 0;
 }
