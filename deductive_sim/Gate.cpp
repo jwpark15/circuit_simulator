@@ -237,9 +237,9 @@ int XORGate::evaluate()
         
 void XORGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
+    evenFaults(fault_map, netout, net1, net2); 
     int temp = (out) ? 0 : 1;
     updateFaultMap(fault_map, potential_faults, netout, temp);
-    std::cout << " THIS IS XOR " << std::endl;
 }
 
 int XNORGate::evaluate()
@@ -255,8 +255,8 @@ int XNORGate::evaluate()
         
 void XNORGate::updateFaultList(std::map<int, std::vector<fault>> &fault_map, std::vector<fault> &potential_faults)
 {
+    evenFaults(fault_map, netout, net1, net2); 
     int temp = (out) ? 0 : 1;
     updateFaultMap(fault_map, potential_faults, netout, temp);
-    std::cout << " THIS IS XNOR " << std::endl;
 }
 

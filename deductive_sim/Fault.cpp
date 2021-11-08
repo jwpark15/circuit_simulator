@@ -176,3 +176,51 @@ void intersectFaults(std::map<int, std::vector<fault>> &fault_map, int newkey, i
 
     printFaults(fault_map);
 }
+
+
+void evenFaults(std::map<int, std::vector<fault>> &fault_map, int newkey, int net1, int net2)
+{
+    auto itr1 = fault_map.find(net1);
+    auto itr2 = fault_map.find(net2);
+    std::vector<fault> temp;
+    bool i1 = false;
+
+    // add all faults from first list
+    if (itr1 != fault_map.end()) {
+        i1 = true;
+        for (auto &v1 : fault_map[net1]) {
+            temp.push_back(v1);
+        }
+    }
+
+    // add faults from 2nd list, but check for overlap
+    if (itr2 != fault_map.end()) {
+        for (auto &v2 : fault_map[net2]) {
+            bool exists = false;
+            if (i1) {
+                int count = 0;
+                for (auto &v : temp) {
+                    if (compareFaults(v, v2)) {
+                        exists = true;
+                        temp.erase(temp.begin() + count);
+                        break;
+                    }
+                    ++count;
+                }
+                if (!exists)
+                    temp.push_back(v2);
+            } else {
+                temp.push_back(v2);
+            }
+        }
+    }
+
+    // update fault map
+    auto itr = fault_map.find(newkey);
+    if (itr != fault_map.end())
+        std::cout << "\n\n==== BAD ===== " << newkey << std::endl;
+    else
+        fault_map.insert(std::make_pair(newkey, temp));
+
+    printFaults(fault_map);
+}

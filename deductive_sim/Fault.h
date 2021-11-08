@@ -29,4 +29,5 @@ void updateFaultMap(std::map<int, std::vector<fault>> &fault_map, std::vector<fa
 void unionFaults(std::map<int, std::vector<fault>> &fault_map, int newkey, int net1, int net2);
 void subtractFaults(std::map<int, std::vector<fault>> &fault_map, int newkey, int net1, int net2);
 void intersectFaults(std::map<int, std::vector<fault>> &fault_map, int newkey, int net1, int net2);
+void evenFaults(std::map<int, std::vector<fault>> &fault_map, int newkey, int net1, int net2);
 #endif

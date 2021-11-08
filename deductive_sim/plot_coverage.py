@@ -27,6 +27,29 @@ def generateRandomInput(in_length):
 
     return key
 
+
+def createPossibleTestList(key, in_len, n, test_set):
+    if (in_len == n): 
+        str_key = ""
+        for x in key:
+            str_key += str(x) 
+        test_set.add(str_key)
+        return
+
+    key[n] = 0
+    createPossibleTestList(key, in_len, n+1, test_set)
+
+    key[n] = 1
+    createPossibleTestList(key, in_len, n+1, test_set)
+    
+    
+        
+def generateUniqueTest(tests):
+    key = random.choice(tuple(tests))
+    tests.remove(key)
+    return key
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('circuit')
@@ -49,9 +72,15 @@ if __name__ == "__main__":
     above_75 = 0;
     above_90 = 0;
 
-    for x in range(20):
-        bin_in = generateRandomInput(in_len)
-        
+    key = [None]*in_len
+    tests = set() 
+    createPossibleTestList(key, in_len, 0, tests)
+    #print(tests)
+    x = 0
+    while(not above_90):
+        #bin_in = generateRandomInput(in_len)
+        bin_in = generateUniqueTest(tests)        
+
         # run C++ engine
         subprocess.run(['./dsim', args.circuit, bin_in])
 
@@ -79,13 +108,15 @@ if __name__ == "__main__":
 
         if (not above_90 and percent_detected > 0.9):
             above_90 = x
-                     
+        
+        x += 1             
                     
+    print(f'Iterations to above 75%: {above_75}')
+    print(f'Iterations to above 90%: {above_90}')
+
     # plot results
     plt.plot(iters, detected)
     plt.ylabel('Percentage of Faults Detected')
     plt.xlabel('Number of Iterations')
     plt.show()
 
-    print(above_75)
-    print(above_90)
