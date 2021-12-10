@@ -1,0 +1,36 @@
+======== s27 ===========
+X0X10X0
+10X10X0
+Undetectable
+10X0010
+10X00X0
+Undetectable
+X0X10X0
+X10XXXX
+======== s298f_2 ===========
+Undetectable
+Undetectable
+XX1X1XXX0XXXXXXXX
+Undetectable
+Undetectable
+Undetectable
+1101XXXXXXXXXX0XX
+Undetectable
+======== s344f_2 ===========
+Undetectable
+Undetectable
+Undetectable
+111XXXXXXXXXXXXXXXXXXXXX
+X1XXXXXXXXXXX1XXXXXXXXXX
+XXXX0XXXXXXXXXXXXXXXXXXX
+Undetectable
+10XXXXXXXXXXXXXXXXXXXXXX
+======== s349f_2 ===========
+XXXXXXXXXXXXXXX1XXXXXXXX
+Undetectable
+01X0000XXX01X100XXXXXXXX
+01X0000XXX00XX10XXXXXXXX
+Undetectable
+01XXX01XXX0XX1X0XXXXXXXX
+XXXXXX1XXXXXXXXXXXXXXXXX
+Undetectable

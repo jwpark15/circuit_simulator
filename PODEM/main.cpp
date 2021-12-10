@@ -13,6 +13,9 @@
 #define D 2
 #define DBAR 3
 #define X 4
+
+#define SUCCESS 1
+#define FAIL 0
 using namespace std;
 
 
@@ -49,6 +52,14 @@ void printQueue(queue<int> q)
         cout << q.front() << " ";
         q.pop();
     }
+    cout << endl;
+}
+
+void printVector(vector<int> v)
+{
+    for (auto &e : v)
+        cout << e << " ";
+
     cout << endl;
 }
 
@@ -238,12 +249,53 @@ void resetValueMap(map<int, int> &m)
     }
 }
 
+void addDFrontier(int net, vector<int> &D_frontier)
+{
+    bool exists = false;
+    for (auto &d : D_frontier)
+    {
+        if (d == net) 
+        {
+            exists = true;
+            break;
+        }
+    }
+    if ( !exists )
+        D_frontier.push_back(net);
+}
+
+void updateDFrontier(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, map<int, int> &value_map, vector<int> &D_frontier)
+{
+    for (auto itr = value_map.begin(); itr != value_map.end(); ++itr)
+    {
+        if (itr->second == D || itr->second == DBAR)
+        {
+            // value could be on the D Frontier
+            for (auto &gate : net_map[itr->first])
+            {
+                if (gate_map[gate]->getOut() == X)
+                {
+                    addDFrontier(gate, D_frontier);
+                }
+            }
+        }
+    }
+}
+
+
 
 NetValue backtrace(int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, map<int, int> &net_driver, map<int, int> &value_map)
 {
-    cout << "BACKTRACING net: " << net << ", w val: " << val << endl;
+    //cout << "BACKTRACING net: " << net << ", w val: " << val << endl;
     NetValue n;
     int cur_gate = net_driver[net];
+    // check if it is already PI
+    if (cur_gate < 0)
+    {
+        n.net = net;
+        n.val = val;
+        return n;
+    }
     int i;
     int v = val;
     int temp;
@@ -251,7 +303,7 @@ NetValue backtrace(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
     {
         i = gate_map[cur_gate]->getParity();
         v = (v + i) % 2;
-        cout << "gate: " << cur_gate << "; parity: " << i << ", v: " << v << endl;
+        //cout << "gate: " << cur_gate << "; parity: " << i << ", v: " << v << endl;
         // get net of input1. check if value is 'x' 
         temp = gate_map[cur_gate]->getNet1(); 
         if (value_map[temp] == X) {
@@ -261,12 +313,12 @@ NetValue backtrace(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
             if (value_map[temp] == X) {
                 n.net = temp;
             } else {
-                cout << "neither input is x!" << endl;
+                //cout << "neither input is x! (backtrace)" << endl;
                 break;
             }
         } 
         cur_gate = net_driver[n.net];
-        cout << "next gate: " << cur_gate << endl;
+        //cout << "next gate: " << cur_gate << endl;
     }    
     n.val = v;
     return n;
@@ -274,11 +326,18 @@ NetValue backtrace(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
 
 // return 1 if detected
 // 0 otherwise
-int imply(int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, map<int, int> &value_map, vector<int> &input_vec, vector<int> &output_vec, vector<int> &D_frontier)
+int imply(int fnet, int fval, int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, map<int, int> &value_map, vector<int> &input_vec, vector<int> &output_vec, vector<int> &D_frontier)
 {
-    cout << "IMPLY" << endl;
     // update input value for all affected gates
+    if (fnet == net)
+    {
+        if (val == 0 && fval == 1)
+            val = DBAR;
+        if (val == 1 && fval == 0)
+            val = D;
+    }
     value_map[net] = val; 
+
     // add gates affected by input to queue and update inputs
     queue<int> q;
     for (auto &gate : net_map[net]) {
@@ -286,8 +345,8 @@ int imply(int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gat
         gate_map[gate]->setInput(val, net);
     }
 
-    cout << "QUEUE" << endl;
-    printQueue(q);
+    //cout << "QUEUE" << endl;
+    //printQueue(q);
     
     // evaluate gates in queue and update value map
     int g, out_net, n_val;
@@ -295,20 +354,34 @@ int imply(int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gat
     {
 
         g = q.front();
-        cout << "EVALUATING GATE: " << g << endl;
-        cout << "EVAL RESULT: " << gate_map[g]->evaluate() << endl;
+        //cout << "EVALUATING GATE: " << g << ". OUT NET: " << gate_map[g]->getNetout() << endl;
+        //cout << "EVAL RESULT: " << gate_map[g]->evaluate() << endl;
         out_net = gate_map[g]->getNetout();
+        gate_map[g]->evaluate();
         n_val = gate_map[g]->getOut();
+        if (fnet == out_net)
+        {
+            if (n_val == 0 && fval == 1)
+                n_val = DBAR;
+            if (n_val == 1 && fval == 0)
+                n_val = D;
+
+            gate_map[g]->overrideOut(n_val);
+        }
         value_map[out_net] = n_val;
         
         // add new gates to queue using net map
         for (auto &new_gate : net_map[out_net])
+        {
+            gate_map[new_gate]->setInput(n_val, out_net);
             q.push(new_gate);
+        }
 
-        cout << "====== NEW VALUE MAP =========" << endl;
-        printNetVals(value_map);
+        //cout << "====== NEW VALUE MAP =========" << endl;
+        //printNetVals(value_map);
         q.pop();
     }
+    updateDFrontier(net_map, gate_map, value_map, D_frontier);
     return 1;
 }
 
@@ -316,7 +389,7 @@ NetValue objective(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
 {
     NetValue n; 
     if (value_map[net] == X) {
-        cout << "objective x" << endl;
+        //cout << "objective x" << endl;
         n.net = net;
         n.val = (val) ? 0 : 1; 
         return n;
@@ -324,6 +397,7 @@ NetValue objective(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
 
 
     int cur_gate = D_frontier.back();
+    D_frontier.pop_back();
     int temp = gate_map[cur_gate]->getNet1(); 
     if (value_map[temp] == X) {
         n.net = temp; 
@@ -332,12 +406,137 @@ NetValue objective(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
         if (value_map[temp] == X) {
             n.net = temp;
         } else {
-            cout << "neither input is x!" << endl;
+            if (DEBUG) {cout << "neither input is x!" << endl;}
         }
     } 
     n.val = (gate_map[cur_gate]->getControlling()) ? 0 : 1;
-    cout << "OBJECTIVE: " << n.net << " " << n.val << endl;
+    if (DEBUG) {cout << "OBJECTIVE: " << n.net << " " << n.val << endl;}
     return n;    
+}
+
+int traceXPath(int net, map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &out_vec, map<int, int> &value_map)
+{
+    int netout, out;
+    for (auto &gate : net_map[net])
+    {
+        netout = gate_map[gate]->getNetout();
+        out = gate_map[gate]->getOut();
+        if (out != X)
+            return FAIL;
+
+        if (find(out_vec.begin(), out_vec.end(), netout) == out_vec.end())
+        {
+            if (out == X)
+                return SUCCESS;
+            else
+                return FAIL;
+        }
+        
+        if (traceXPath(netout, net_map, gate_map, out_vec, value_map) == FAIL)
+            continue; 
+
+        return SUCCESS;
+    }
+    return FAIL;
+}
+
+int xPathCheck(map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &out_vec, map<int, int> &value_map, vector<int> &D_frontier)
+{
+    int net, out, gate;
+    bool flag;
+    for (auto &d : D_frontier)
+    {
+        net = gate_map[d]->getNetout();
+        
+        if (traceXPath(net, net_map, gate_map, out_vec, value_map) == SUCCESS)
+            return SUCCESS;
+    }
+    return FAIL;
+}
+
+int podem(int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &in_vec, vector<int> &out_vec, map<int, int> &net_driver, map<int, int> &value_map, vector<int> &D_frontier, int stack_level)
+{
+    if (DEBUG) {cout << "====== STACK LEVEL : " << stack_level << endl;}
+    // check for error at PO
+    for (auto &o : out_vec)
+    {
+        if ((value_map[o] == D) || (value_map[o] == DBAR))
+            return SUCCESS;
+    }
+   
+    // check if test is possible
+    if (value_map[net] == val) {
+        if (DEBUG) {cout << "FAIL...value map == val" << endl;}
+        return FAIL;
+    }
+    
+    //printVector(D_frontier);
+    if (D_frontier.size() == 0) {
+        if (value_map[net] != X) {
+            if (DEBUG) {cout << "FAIL...D frontier empty & net != X" << endl;}
+            return FAIL;
+        }
+    } else if (xPathCheck(net_map, gate_map, out_vec, value_map, D_frontier) == FAIL) {
+        if (DEBUG) {cout << "FAIL...X path check" << endl;}
+        return FAIL;
+    }
+
+
+    // objective
+    NetValue objective_pair = objective(net, val, net_map, gate_map, net_driver, value_map, D_frontier);
+    if (DEBUG) {cout << "----- OBJ done. net: " << objective_pair.net << ".val: " << objective_pair.val << endl;}
+    // backtrace
+    NetValue backtrace_pair = backtrace(objective_pair.net, objective_pair.val, net_map, gate_map, net_driver, value_map);
+    if (DEBUG) {cout << "----- BACKTRACE done. net: " << backtrace_pair.net << ", val: " << backtrace_pair.val << endl;}
+    // imply
+    imply(net, val, backtrace_pair.net, backtrace_pair.val, net_map, gate_map, value_map, in_vec, out_vec, D_frontier);
+    if (DEBUG) {cout << "----- IMPLY done. value map: " << endl;}
+    //printNetVals(value_map);
+
+    if (DEBUG) {
+        cout << "----- D Frontier updated: " << endl;
+        printVector(D_frontier);
+    }
+
+    // check for PODEM success
+    if ( podem(net, val, net_map, gate_map, in_vec, out_vec, net_driver, value_map, D_frontier, stack_level+1) == SUCCESS )
+        return SUCCESS;
+
+    // reverse decision
+    //cout << "============= REVERSE DECISION ====================" << endl;
+    imply(net, val, backtrace_pair.net, (backtrace_pair.val) ? 0 : 1, net_map, gate_map, value_map, in_vec, out_vec, D_frontier);
+    // check for success
+    if ( podem(net, val, net_map, gate_map, in_vec, out_vec, net_driver, value_map, D_frontier, stack_level+1) == SUCCESS )
+        return SUCCESS;
+
+    imply(net, val, backtrace_pair.net, X, net_map, gate_map, value_map, in_vec, out_vec, D_frontier);
+
+    return FAIL;
+}
+
+
+void printTestSequence(map<int, int> &value_map, vector<int> &input)
+{
+    if (DEBUG) {
+        cout << "=======================================" << endl;
+        cout << "Printing Test Sequence..." << endl;
+    }
+    int v;
+    for (auto &in : input)
+    {
+        v = value_map[in];
+        if (v == 0)
+            cout << "0";
+        else if (v == 1)
+            cout << "1";
+        else if (v == D)
+            cout << "1";
+        else if (v == DBAR)
+            cout << "0";
+        else if (v == X)
+            cout << "X";
+    }
+    cout << endl;
 }
 
 
@@ -350,7 +549,7 @@ int main(int argc, char** argv)
     const char *filename = argv[1];
     int faulty_net = stoi(argv[2]);
     int faulty_val = stoi(argv[3]);
-    cout << faulty_net << " FAULTY NET: " << endl;
+    //cout << faulty_net << " FAULTY NET: " << endl;
     //const char *faulty_val = argv[3];
 
     // variable init
@@ -358,8 +557,6 @@ int main(int argc, char** argv)
     map<int, Gate*> gate_map;
     vector<int> in_vec;
     vector<int> out_vec;
-    vector<fault> potential_fault_vec;
-    map<int, vector<fault>> detected_fault_map;
     map<int, int> net_driver;
     map<int, int> value_map;
     vector<int> D_frontier;
@@ -377,22 +574,27 @@ int main(int argc, char** argv)
             value_map.insert(make_pair(v, X));
     }
     
-    cout << "NET MAP" << endl;
-    printNetMap(net_map);
-    cout << "VALUE MAP" << endl;
-    printNetVals(value_map);
+    if (DEBUG) {
+        cout << "NET MAP" << endl;
+        printNetMap(net_map);
+        cout << "VALUE MAP" << endl;
+        printNetVals(value_map);
+    }
 
-    NetValue objective_pair = objective(faulty_net, faulty_val, net_map, gate_map, net_driver, value_map, D_frontier);
-    NetValue backtrace_pair = backtrace(objective_pair.net, objective_pair.val, net_map, gate_map, net_driver, value_map);
-    cout << "net: " << backtrace_pair.net << ", val: " << backtrace_pair.val << endl;
-    imply(backtrace_pair.net, backtrace_pair.val, net_map, gate_map, value_map, in_vec, out_vec, D_frontier);
-
+    // Run PODEM
+    int ret_code = podem(faulty_net, faulty_val, net_map, gate_map, in_vec, out_vec, net_driver, value_map, D_frontier, 0);
    
-    //if(DEBUG) {printNetMap(net_map);}
-    int N = in_vec.size();
-    int M = out_vec.size() + 1;
-    char output[M];
+    if (DEBUG) {
+        cout << "PODEM RETURNS: " << ret_code << endl;
+        cout << "FINAL VALUE MAP: " << endl;
+        printNetVals(value_map);
+    }
 
-    // PODEM
+    // determine the test sequence
+    if (ret_code == SUCCESS)
+        printTestSequence(value_map, in_vec);
+    else
+        cout << "Undetectable" << endl;
+
     return 0;
 }

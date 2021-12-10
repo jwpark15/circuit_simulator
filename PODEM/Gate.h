@@ -33,6 +33,7 @@ class Gate
         int getNetout() {return netout;}
         int getParity() {return i_parity;}
         int getControlling() {return control_val;}
+        void overrideOut(int x) {out = x;}
         virtual void setInput(int x, int net);
         bool areInputsSet();
         virtual int evaluate() 
