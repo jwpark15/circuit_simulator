@@ -416,22 +416,23 @@ NetValue objective(int net, int val, map<int, vector<int>> &net_map, map<int, Ga
 
 int traceXPath(int net, map<int, vector<int>> &net_map, map<int, Gate*> &gate_map, vector<int> &out_vec, map<int, int> &value_map)
 {
-    int netout, out;
+    int out, netout;
+    out = value_map[net];
+    if (find(out_vec.begin(), out_vec.end(), net) != out_vec.end())
+    {
+        if (out == X)
+            return SUCCESS;
+        else
+            return FAIL;
+    }
+
     for (auto &gate : net_map[net])
     {
-        netout = gate_map[gate]->getNetout();
         out = gate_map[gate]->getOut();
         if (out != X)
-            return FAIL;
+            continue;
 
-        if (find(out_vec.begin(), out_vec.end(), netout) == out_vec.end())
-        {
-            if (out == X)
-                return SUCCESS;
-            else
-                return FAIL;
-        }
-        
+        netout = gate_map[gate]->getNetout();
         if (traceXPath(netout, net_map, gate_map, out_vec, value_map) == FAIL)
             continue; 
 
@@ -490,8 +491,10 @@ int podem(int net, int val, map<int, vector<int>> &net_map, map<int, Gate*> &gat
     if (DEBUG) {cout << "----- BACKTRACE done. net: " << backtrace_pair.net << ", val: " << backtrace_pair.val << endl;}
     // imply
     imply(net, val, backtrace_pair.net, backtrace_pair.val, net_map, gate_map, value_map, in_vec, out_vec, D_frontier);
-    if (DEBUG) {cout << "----- IMPLY done. value map: " << endl;}
-    //printNetVals(value_map);
+    if (DEBUG) {
+        cout << "----- IMPLY done. value map: " << endl;
+        printNetVals(value_map);
+    }
 
     if (DEBUG) {
         cout << "----- D Frontier updated: " << endl;

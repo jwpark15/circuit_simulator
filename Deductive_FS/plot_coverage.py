@@ -20,11 +20,16 @@ def parseCircuit(filename):
                 
     return counter, nets
 
-def generateRandomInput(in_length):
-    key = ""
-    for i in range(in_length):
-        key += str(random.randint(0,1))
+def generateRandomInput(in_length, tests):
+    while(True):
+        key = ""
+        for i in range(in_length):
+            key += str(random.randint(0,1))
 
+        if key not in tests:
+            tests.add(key)
+            break
+        
     return key
 
 
@@ -66,20 +71,22 @@ if __name__ == "__main__":
 
     detected_fault_set = set()
     
-    iters = []
-    detected = []
+    iters = [0]
+    detected = [0]
     
     above_75 = 0;
     above_90 = 0;
 
-    key = [None]*in_len
     tests = set() 
+    """
+    key = [None]*in_len
     createPossibleTestList(key, in_len, 0, tests)
+    """
     #print(tests)
-    x = 0
+    x = 1
     while(not above_90):
-        #bin_in = generateRandomInput(in_len)
-        bin_in = generateUniqueTest(tests)        
+        bin_in = generateRandomInput(in_len, tests)
+        #bin_in = generateUniqueTest(tests)        
 
         # run C++ engine
         subprocess.run(['./dsim', args.circuit, bin_in])

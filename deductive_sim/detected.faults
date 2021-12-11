@@ -1,9 +1,0 @@
-Circuit: testXOR.txt
-Binary Input: 0
-
------- DETECTED FAULTS ------
-NET		STUCK-AT
-2		0
-3		0
-4		1
-NUMBER OF FAULTS DETECTED: 3
